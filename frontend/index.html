@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cloud Management System</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header class="hero">
+        <h1>Cloud Management System</h1>
+        <p>Frontend in a separate folder connected to your backend API.</p>
+      </header>
+
+      <section class="card">
+        <h2>Authentication</h2>
+        <form id="auth-form" class="inline-form">
+          <input type="text" id="username" placeholder="Username" required />
+          <input type="password" id="password" placeholder="Password" required />
+          <button type="submit">Connect</button>
+        </form>
+        <p id="auth-status" class="status">Enter your credentials to access protected endpoints.</p>
+      </section>
+
+      <section class="card">
+        <div class="section-header">
+          <h2>System Health</h2>
+          <button id="health-btn">Check Health</button>
+        </div>
+        <div id="health-result" class="health-box">Click the button to verify the service.</div>
+      </section>
+
+      <section class="card">
+        <h2>Add Cloud Resource</h2>
+        <form id="resource-form" class="resource-form">
+          <input type="text" id="resource-name" placeholder="Resource name" required />
+          <input type="text" id="resource-type" placeholder="Resource type" required />
+          <input type="text" id="resource-status" placeholder="Status" required />
+          <button type="submit">Create Resource</button>
+        </form>
+        <p id="resource-message" class="status"></p>
+      </section>
+
+      <section class="card">
+        <div class="section-header">
+          <h2>Existing Resources</h2>
+          <button id="refresh-btn">Refresh</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Type</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="resource-table-body">
+            <tr>
+              <td colspan="4">No resources loaded yet.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
