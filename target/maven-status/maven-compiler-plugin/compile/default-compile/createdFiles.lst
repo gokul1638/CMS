@@ -1,0 +1,7 @@
+com\cms\cloudmanagement\controller\CloudResourceController.class
+com\cms\cloudmanagement\model\CloudResource.class
+com\cms\cloudmanagement\Application.class
+com\cms\cloudmanagement\config\SecurityConfig.class
+com\cms\cloudmanagement\repository\CloudResourceRepository.class
+com\cms\cloudmanagement\controller\HealthController.class
+com\cms\cloudmanagement\service\CloudResourceService.class
