@@ -10,16 +10,20 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/health")
 @CrossOrigin(origins = "*")
 public class HealthController {
     
-    @GetMapping
-    public ResponseEntity<Map<String, Object>> healthCheck() {
+    @GetMapping("/api/health")
+    public ResponseEntity<Map<String, Object>> healthCheckJson() {
         Map<String, Object> response = new HashMap<>();
         response.put("status", "UP");
         response.put("service", "Cloud Management System");
         response.put("timestamp", System.currentTimeMillis());
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/health")
+    public ResponseEntity<String> healthCheckText() {
+        return new ResponseEntity<>("Cloud Management System is running", HttpStatus.OK);
     }
 }

@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 @Configuration
 public class SecurityConfig {
@@ -14,8 +15,13 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/health", "/actuator/health", "/error").permitAll()
+                .requestMatchers(AntPathRequestMatcher.antMatcher("/health")).permitAll()
+                .requestMatchers(AntPathRequestMatcher.antMatcher("/api/health")).permitAll()
+                .requestMatchers(AntPathRequestMatcher.antMatcher("/actuator/health")).permitAll()
+                .requestMatchers(AntPathRequestMatcher.antMatcher("/error")).permitAll()
+                .requestMatchers(AntPathRequestMatcher.antMatcher("/h2-console/**")).permitAll()
                 .anyRequest().authenticated())
+            .headers(headers -> headers.frameOptions(frame -> frame.disable()))
             .httpBasic(Customizer.withDefaults());
 
         return http.build();
