@@ -7,7 +7,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "cloud_resources")
+@Table(name = "resources")
 public class CloudResource {
 
     @Id
@@ -15,22 +15,26 @@ public class CloudResource {
     private Long id;
 
     private String name;
-    private String type;
-    private String status;
+    private String unit;
     private String description;
-    private String region;
+    private Double tariff; // Current price per unit
+    private Integer availableQuantity;
+    private Integer totalQuantity;
+    private String status; // ACTIVE, INACTIVE
 
     // Default constructor
     public CloudResource() {
     }
 
     // Parameterized constructor
-    public CloudResource(String name, String type, String status, String description, String region) {
+    public CloudResource(String name, String unit, String description, Double tariff, Integer availableQuantity, Integer totalQuantity, String status) {
         this.name = name;
-        this.type = type;
-        this.status = status;
+        this.unit = unit;
         this.description = description;
-        this.region = region;
+        this.tariff = tariff;
+        this.availableQuantity = availableQuantity;
+        this.totalQuantity = totalQuantity;
+        this.status = status;
     }
 
     // Getters and Setters
@@ -50,20 +54,12 @@ public class CloudResource {
         this.name = name;
     }
 
-    public String getType() {
-        return type;
+    public String getUnit() {
+        return unit;
     }
 
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
+    public void setUnit(String unit) {
+        this.unit = unit;
     }
 
     public String getDescription() {
@@ -74,11 +70,35 @@ public class CloudResource {
         this.description = description;
     }
 
-    public String getRegion() {
-        return region;
+    public Double getTariff() {
+        return tariff;
     }
 
-    public void setRegion(String region) {
-        this.region = region;
+    public void setTariff(Double tariff) {
+        this.tariff = tariff;
+    }
+
+    public Integer getAvailableQuantity() {
+        return availableQuantity;
+    }
+
+    public void setAvailableQuantity(Integer availableQuantity) {
+        this.availableQuantity = availableQuantity;
+    }
+
+    public Integer getTotalQuantity() {
+        return totalQuantity;
+    }
+
+    public void setTotalQuantity(Integer totalQuantity) {
+        this.totalQuantity = totalQuantity;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

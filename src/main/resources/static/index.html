@@ -3,68 +3,700 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Cloud Management System</title>
+    <title>CMS - Enterprise Cloud Management Platform</title>
+    <!-- Premium Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <div class="container">
-      <header class="hero">
-        <h1>Cloud Management System</h1>
-        <p>Manage your cloud resources through a simple web dashboard.</p>
-      </header>
+    <!-- App Container -->
+    <div id="app">
+      
+      <!-- 1. Authentication View (Login/Register/Forgot) -->
+      <div id="auth-view" class="auth-container">
+        <div class="auth-card glass">
+          <div class="auth-header">
+            <div class="logo">
+              <i data-lucide="cloud" class="logo-icon"></i>
+              <span>CMS Enterprise</span>
+            </div>
+            <h2 id="auth-title">Welcome Back</h2>
+            <p id="auth-subtitle">Login to manage your provisioned cloud resources</p>
+          </div>
 
-      <section class="card">
-        <h2>Authentication</h2>
-        <form id="auth-form" class="inline-form">
-          <input type="text" id="username" placeholder="Username" required />
-          <input type="password" id="password" placeholder="Password" required />
-          <button type="submit">Connect</button>
-        </form>
-        <p id="auth-status" class="status">Enter your credentials to access protected endpoints.</p>
-      </section>
+          <!-- Login Form -->
+          <form id="login-form">
+            <div class="form-group">
+              <label for="login-username">Username</label>
+              <div class="input-wrapper">
+                <i data-lucide="user" class="input-icon"></i>
+                <input type="text" id="login-username" placeholder="Enter username" required />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="login-password">Password</label>
+              <div class="input-wrapper">
+                <i data-lucide="lock" class="input-icon"></i>
+                <input type="password" id="login-password" placeholder="Enter password" required />
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">
+              <span>Sign In</span>
+              <i data-lucide="arrow-right"></i>
+            </button>
+            <div class="auth-footer">
+              <a href="#" id="to-forgot">Forgot Password?</a>
+              <span>Don't have an account? <a href="#" id="to-register">Register</a></span>
+            </div>
+          </form>
 
-      <section class="card">
-        <div class="section-header">
-          <h2>System Health</h2>
-          <button id="health-btn">Check Health</button>
+          <!-- Register Form -->
+          <form id="register-form" style="display: none;">
+            <div class="form-group">
+              <label for="reg-username">Username</label>
+              <div class="input-wrapper">
+                <i data-lucide="user" class="input-icon"></i>
+                <input type="text" id="reg-username" placeholder="Choose username" required />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="reg-email">Email Address</label>
+              <div class="input-wrapper">
+                <i data-lucide="mail" class="input-icon"></i>
+                <input type="email" id="reg-email" placeholder="email@example.com" required />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="reg-password">Password</label>
+              <div class="input-wrapper">
+                <i data-lucide="lock" class="input-icon"></i>
+                <input type="password" id="reg-password" placeholder="Choose password" required />
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">
+              <span>Create Account</span>
+              <i data-lucide="user-plus"></i>
+            </button>
+            <div class="auth-footer">
+              <span>Already registered? <a href="#" id="to-login-from-reg">Sign In</a></span>
+            </div>
+          </form>
+
+          <!-- Forgot Password Form -->
+          <form id="forgot-form" style="display: none;">
+            <div class="form-group">
+              <label for="forgot-username">Username</label>
+              <div class="input-wrapper">
+                <i data-lucide="user" class="input-icon"></i>
+                <input type="text" id="forgot-username" placeholder="Enter username" required />
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">
+              <span>Generate Reset Code</span>
+              <i data-lucide="key-round"></i>
+            </button>
+            <div class="auth-footer">
+              <a href="#" id="to-login-from-forgot">Back to Sign In</a>
+            </div>
+          </form>
+
+          <!-- Reset Password Form -->
+          <form id="reset-form" style="display: none;">
+            <div class="form-group">
+              <label for="reset-username">Username</label>
+              <div class="input-wrapper">
+                <i data-lucide="user" class="input-icon"></i>
+                <input type="text" id="reset-username" readonly required />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="reset-code">Reset Code (Check Console/API Response)</label>
+              <div class="input-wrapper">
+                <i data-lucide="shield-check" class="input-icon"></i>
+                <input type="text" id="reset-code" placeholder="Enter 8-digit code" required />
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="reset-password">New Password</label>
+              <div class="input-wrapper">
+                <i data-lucide="lock" class="input-icon"></i>
+                <input type="password" id="reset-password" placeholder="Enter new password" required />
+              </div>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">
+              <span>Save New Password</span>
+              <i data-lucide="check"></i>
+            </button>
+          </form>
+
+          <p id="auth-status-msg" class="status-msg"></p>
         </div>
-        <div id="health-result" class="health-box">Click the button to verify the service.</div>
-      </section>
+      </div>
 
-      <section class="card">
-        <h2>Add Cloud Resource</h2>
-        <form id="resource-form" class="resource-form">
-          <input type="text" id="resource-name" placeholder="Resource name" required />
-          <input type="text" id="resource-type" placeholder="Resource type" required />
-          <input type="text" id="resource-status" placeholder="Status" required />
-          <button type="submit">Create Resource</button>
-        </form>
-        <p id="resource-message" class="status"></p>
-      </section>
+      <!-- 2. Main Portal Layout -->
+      <div id="portal-view" class="portal-container" style="display: none;">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar glass">
+          <div class="sidebar-brand">
+            <i data-lucide="cloud" class="brand-icon"></i>
+            <span>CMS Cloud</span>
+          </div>
 
-      <section class="card">
-        <div class="section-header">
-          <h2>Existing Resources</h2>
-          <button id="refresh-btn">Refresh</button>
+          <div class="user-pill">
+            <div class="avatar">
+              <i data-lucide="user"></i>
+            </div>
+            <div class="user-info">
+              <span id="nav-user-name">Gokul</span>
+              <span id="nav-user-role" class="badge badge-role">Customer</span>
+            </div>
+          </div>
+
+          <nav class="nav-menu">
+            <a href="#" class="nav-item active" data-view="dashboard">
+              <i data-lucide="layout-dashboard"></i>
+              <span>Dashboard</span>
+            </a>
+            <a href="#" class="nav-item" data-view="vms">
+              <i data-lucide="server"></i>
+              <span>Virtual Machines</span>
+            </a>
+            <a href="#" class="nav-item" data-view="catalog">
+              <i data-lucide="database"></i>
+              <span>Resource Catalog</span>
+            </a>
+            <a href="#" class="nav-item" data-view="orders">
+              <i data-lucide="shopping-cart"></i>
+              <span>Orders Queue</span>
+            </a>
+            <a href="#" class="nav-item" data-view="invoices">
+              <i data-lucide="file-text"></i>
+              <span>Billing & Invoices</span>
+            </a>
+            <a href="#" class="nav-item admin-only" data-view="users">
+              <i data-lucide="users"></i>
+              <span>Users Console</span>
+            </a>
+            <a href="#" class="nav-item admin-only" data-view="tariffs">
+              <i data-lucide="percent"></i>
+              <span>Tariff Configurator</span>
+            </a>
+            <a href="#" class="nav-item staff-only" data-view="reports">
+              <i data-lucide="bar-chart-3"></i>
+              <span>Reports</span>
+            </a>
+            <a href="#" class="nav-item admin-only" data-view="logs">
+              <i data-lucide="activity"></i>
+              <span>Audit Logs</span>
+            </a>
+          </nav>
+
+          <div class="sidebar-footer">
+            <button id="logout-btn" class="btn btn-secondary btn-block">
+              <i data-lucide="log-out"></i>
+              <span>Sign Out</span>
+            </button>
+          </div>
+        </aside>
+
+        <!-- Main Workspace Area -->
+        <main class="main-workspace">
+          <!-- Top Bar -->
+          <header class="topbar glass">
+            <div class="topbar-left">
+              <h1 id="view-title">Dashboard</h1>
+            </div>
+            <div class="topbar-right">
+              <!-- Notifications Dropdown Trigger -->
+              <div class="notification-wrapper">
+                <button id="noti-trigger-btn" class="icon-btn">
+                  <i data-lucide="bell"></i>
+                  <span id="noti-badge" class="badge badge-danger" style="display: none;">0</span>
+                </button>
+                <div id="noti-dropdown" class="noti-dropdown-box glass" style="display: none;">
+                  <div class="noti-header">
+                    <h4>System Alerts</h4>
+                    <button id="noti-read-all-btn" class="text-link">Mark all read</button>
+                  </div>
+                  <div id="noti-list" class="noti-list-container">
+                    <div class="noti-empty">No alerts found.</div>
+                  </div>
+                </div>
+              </div>
+              <div class="system-status-indicator">
+                <span class="status-dot green"></span>
+                <span>Uptime 99.98%</span>
+              </div>
+            </div>
+          </header>
+
+          <!-- Dynamic Workspace Content Screens -->
+          <div id="workspace-content" class="content-container">
+            
+            <!-- Dashboard Screen -->
+            <section id="view-dashboard" class="workspace-view">
+              <!-- Customer KPI Cards -->
+              <div id="cust-kpis" class="grid-4">
+                <div class="card kpi-card glass">
+                  <div class="kpi-icon blue"><i data-lucide="activity"></i></div>
+                  <div class="kpi-info">
+                    <span class="kpi-title">Running VMs</span>
+                    <span class="kpi-val" id="kpi-running-vms">0</span>
+                  </div>
+                </div>
+                <div class="card kpi-card glass">
+                  <div class="kpi-icon purple"><i data-lucide="cpu"></i></div>
+                  <div class="kpi-info">
+                    <span class="kpi-title">Allocated CPU Cores</span>
+                    <span class="kpi-val" id="kpi-total-cpu">0</span>
+                  </div>
+                </div>
+                <div class="card kpi-card glass">
+                  <div class="kpi-icon orange"><i data-lucide="database"></i></div>
+                  <div class="kpi-info">
+                    <span class="kpi-title">Total Storage (GB)</span>
+                    <span class="kpi-val" id="kpi-total-storage">0</span>
+                  </div>
+                </div>
+                <div class="card kpi-card glass">
+                  <div class="kpi-icon green"><i data-lucide="indian-rupee"></i></div>
+                  <div class="kpi-info">
+                    <span class="kpi-title">Pending Invoices</span>
+                    <span class="kpi-val" id="kpi-pending-bill">₹0.00</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Admin KPI Cards -->
+              <div id="admin-kpis" class="grid-4" style="display: none;">
+                <div class="card kpi-card glass">
+                  <div class="kpi-icon blue"><i data-lucide="users"></i></div>
+                  <div class="kpi-info">
+                    <span class="kpi-title">Registered Users</span>
+                    <span class="kpi-val" id="kpi-admin-users">0</span>
+                  </div>
+                </div>
+                <div class="card kpi-card glass">
+                  <div class="kpi-icon purple"><i data-lucide="server"></i></div>
+                  <div class="kpi-info">
+                    <span class="kpi-title">Provisioned VMs</span>
+                    <span class="kpi-val" id="kpi-admin-vms">0</span>
+                  </div>
+                </div>
+                <div class="card kpi-card glass">
+                  <div class="kpi-icon green"><i data-lucide="indian-rupee"></i></div>
+                  <div class="kpi-info">
+                    <span class="kpi-title">Total Revenue</span>
+                    <span class="kpi-val" id="kpi-admin-revenue">₹0.00</span>
+                  </div>
+                </div>
+                <div class="card kpi-card glass">
+                  <div class="kpi-icon orange"><i data-lucide="clock"></i></div>
+                  <div class="kpi-info">
+                    <span class="kpi-title">Pending Approvals</span>
+                    <span class="kpi-val" id="kpi-admin-approvals">0</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid-2 mt-4">
+                <!-- Usage charts (customer) or Revenue Chart (admin) -->
+                <div class="card glass">
+                  <div class="card-header">
+                    <h3 id="chart-section-title">Telemetry Resource Tracking</h3>
+                  </div>
+                  <div class="chart-container">
+                    <canvas id="dashboardChart"></canvas>
+                  </div>
+                </div>
+
+                <!-- Profile summary (customer) or Inventory Meter Lists (admin) -->
+                <div class="card glass" id="dashboard-secondary-card">
+                  <div class="card-header">
+                    <h3>Infrastructure Status</h3>
+                  </div>
+                  <div id="dashboard-secondary-content">
+                    <!-- Dynamic loader -->
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Virtual Machines Screen -->
+            <section id="view-vms" class="workspace-view" style="display: none;">
+              <div class="action-header">
+                <h3>Provisioned Virtual Machines</h3>
+                <button id="open-order-wizard-btn" class="btn btn-primary">
+                  <i data-lucide="plus"></i>
+                  <span>Deploy New Instance</span>
+                </button>
+              </div>
+              <div class="table-container glass mt-4">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>VM Name</th>
+                      <th>Region</th>
+                      <th>Configuration</th>
+                      <th>OS Platform</th>
+                      <th>Status</th>
+                      <th>Operations</th>
+                    </tr>
+                  </thead>
+                  <tbody id="vms-table-body">
+                    <tr><td colspan="6" class="text-center">Loading virtual machines...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <!-- Resource Catalog Screen -->
+            <section id="view-catalog" class="workspace-view" style="display: none;">
+              <h3>Available Infrastructure Catalog</h3>
+              <p>Configure and scale compute capabilities with current resource prices.</p>
+              <div class="grid-3 mt-4" id="catalog-grid">
+                <!-- Seeding Dynamic Resources -->
+              </div>
+            </section>
+
+            <!-- Orders Queue Screen -->
+            <section id="view-orders" class="workspace-view" style="display: none;">
+              <h3>Cloud Provisioning Request Orders</h3>
+              <div class="table-container glass mt-4">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Order ID</th>
+                      <th>User</th>
+                      <th>Requested VM</th>
+                      <th>Specs (CPU/RAM/Storage)</th>
+                      <th>Region</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="orders-table-body">
+                    <tr><td colspan="7" class="text-center">Loading orders queue...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <!-- Invoices & Billing Screen -->
+            <section id="view-invoices" class="workspace-view" style="display: none;">
+              <h3>Invoices and Payments History</h3>
+              <div class="table-container glass mt-4">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Invoice Number</th>
+                      <th>Billing Period</th>
+                      <th>Amount</th>
+                      <th>Status</th>
+                      <th>Due Date</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="invoices-table-body">
+                    <tr><td colspan="6" class="text-center">Loading invoices database...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <!-- Users Console Screen (Admin) -->
+            <section id="view-users" class="workspace-view" style="display: none;">
+              <h3>User Accounts Console</h3>
+              <div class="table-container glass mt-4">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>User ID</th>
+                      <th>Username</th>
+                      <th>Email</th>
+                      <th>System Role</th>
+                      <th>Account Status</th>
+                      <th>Active Plan</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody id="users-table-body">
+                    <tr><td colspan="7" class="text-center">Loading user records...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <!-- Tariff Configurator Screen (Admin) -->
+            <section id="view-tariffs" class="workspace-view" style="display: none;">
+              <div class="action-header">
+                <h3>Global Pricing Tariff Settings</h3>
+              </div>
+              <div class="grid-2 mt-4">
+                <div class="card glass">
+                  <div class="card-header">
+                    <h3>Adjust Active Tariffs</h3>
+                  </div>
+                  <form id="tariff-update-form" class="mt-2">
+                    <div class="form-group">
+                      <label for="tariff-resource-type">Resource</label>
+                      <select id="tariff-resource-type" required>
+                        <option value="CPU">CPU Price per Core</option>
+                        <option value="RAM">RAM Price per GB</option>
+                        <option value="Storage">Storage Price per GB</option>
+                        <option value="GPU">GPU Price per Card</option>
+                        <option value="Bandwidth">Bandwidth Price per Mbps</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label for="tariff-price">New Price per Unit (₹)</label>
+                      <input type="number" step="0.01" id="tariff-price" placeholder="Enter new rate" required />
+                    </div>
+                    <button type="submit" class="btn btn-primary">Update Pricing Rate</button>
+                  </form>
+                </div>
+                <div class="card glass">
+                  <div class="card-header">
+                    <h3>Tariff Log History</h3>
+                  </div>
+                  <div class="list-container mt-2" id="tariffs-log-list">
+                    <!-- Dynamic logs -->
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Reports Screen -->
+            <section id="view-reports" class="workspace-view" style="display: none;">
+              <h3>Data Analytics & Reporting</h3>
+              <div class="grid-2 mt-4" id="reports-grid">
+                <!-- Seeding reports -->
+              </div>
+            </section>
+
+            <!-- Audit Logs Screen (Admin) -->
+            <section id="view-logs" class="workspace-view" style="display: none;">
+              <h3>System Security Audit Trails</h3>
+              <div class="table-container glass mt-4">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Timestamp</th>
+                      <th>User</th>
+                      <th>Action Logged</th>
+                      <th>Previous State</th>
+                      <th>New State</th>
+                      <th>IP Origin</th>
+                    </tr>
+                  </thead>
+                  <tbody id="logs-table-body">
+                    <tr><td colspan="6" class="text-center">Loading audit log database...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+          </div>
+        </main>
+      </div>
+
+      <!-- Modals Layer -->
+
+      <!-- 1. Provision VM Wizard Modal -->
+      <div id="order-wizard-modal" class="modal-backdrop" style="display: none;">
+        <div class="modal-card glass">
+          <div class="modal-header">
+            <h3>Provision New Virtual Instance</h3>
+            <button class="close-modal-btn icon-btn"><i data-lucide="x"></i></button>
+          </div>
+          <div class="modal-body">
+            <form id="order-wizard-form">
+              <div class="form-group">
+                <label for="wiz-vm-name">VM Name</label>
+                <input type="text" id="wiz-vm-name" placeholder="production-api-node" required />
+              </div>
+              <div class="form-group">
+                <label for="wiz-vm-os">Operating System Platform</label>
+                <select id="wiz-vm-os" required>
+                  <option value="Ubuntu">Ubuntu Server LTS</option>
+                  <option value="CentOS">CentOS Enterprise Linux</option>
+                  <option value="Windows Server">Windows Server 2022</option>
+                  <option value="RedHat Linux">RedHat Enterprise Linux</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="wiz-vm-region">Geographic Zone Region</label>
+                <select id="wiz-vm-region" required>
+                  <option value="us-east-1">US East (N. Virginia)</option>
+                  <option value="us-west-2">US West (Oregon)</option>
+                  <option value="eu-west-1">Europe (Ireland)</option>
+                  <option value="ap-south-1">Asia Pacific (Mumbai)</option>
+                </select>
+              </div>
+
+              <!-- Plan Selector -->
+              <div class="form-group">
+                <label>Billing Subscription Model</label>
+                <div class="plan-cards-row">
+                  <div class="plan-select-card active" data-plan="Basic">
+                    <h5>Basic</h5>
+                    <p>2 CPU / 4GB RAM / 50GB HDD</p>
+                  </div>
+                  <div class="plan-select-card" data-plan="Standard">
+                    <h5>Standard</h5>
+                    <p>4 CPU / 8GB RAM / 100GB HDD</p>
+                  </div>
+                  <div class="plan-select-card" data-plan="Premium">
+                    <h5>Premium</h5>
+                    <p>8 CPU / 16GB RAM / 250GB HDD</p>
+                  </div>
+                  <div class="plan-select-card" data-plan="Custom">
+                    <h5>Custom Plan</h5>
+                    <p>Tailored configuration sizing</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Custom sliders (visible only if plan is Custom) -->
+              <div id="custom-sizing-panel" style="display: none;" class="custom-panel glass">
+                <div class="form-group">
+                  <label for="wiz-cpu">CPU Cores: <span id="wiz-cpu-val">2</span></label>
+                  <input type="range" id="wiz-cpu" min="1" max="32" value="2" />
+                </div>
+                <div class="form-group">
+                  <label for="wiz-ram">System Memory (RAM): <span id="wiz-ram-val">4</span> GB</label>
+                  <input type="range" id="wiz-ram" min="1" max="128" value="4" />
+                </div>
+                <div class="form-group">
+                  <label for="wiz-storage">Disk Storage: <span id="wiz-storage-val">50</span> GB</label>
+                  <input type="range" id="wiz-storage" min="10" max="2000" step="10" value="50" />
+                </div>
+                <div class="form-group">
+                  <label for="wiz-gpu">GPU Accelerator Cards</label>
+                  <input type="number" id="wiz-gpu" min="0" max="8" value="0" />
+                </div>
+                <div class="form-group">
+                  <label for="wiz-bandwidth">Bandwidth throughput speed (Mbps)</label>
+                  <input type="number" id="wiz-bandwidth" min="10" max="10000" step="10" value="100" />
+                </div>
+              </div>
+
+              <div class="cost-estimator-bar">
+                <span>Estimated Cost rate: </span>
+                <strong id="wiz-estimated-cost">₹1,780.00 / month</strong>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-block mt-4">Submit Resource Requisition</button>
+            </form>
+          </div>
         </div>
-        <table>
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Name</th>
-              <th>Type</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="resource-table-body">
-            <tr>
-              <td colspan="4">No resources loaded yet.</td>
-            </tr>
-          </tbody>
-        </table>
-      </section>
+      </div>
+
+      <!-- 2. VM Upgrade Modal -->
+      <div id="vm-upgrade-modal" class="modal-backdrop" style="display: none;">
+        <div class="modal-card glass">
+          <div class="modal-header">
+            <h3>Scale VM Virtual Hardware</h3>
+            <button class="close-modal-btn icon-btn"><i data-lucide="x"></i></button>
+          </div>
+          <div class="modal-body">
+            <form id="vm-upgrade-form">
+              <input type="hidden" id="upgrade-vm-id" />
+              <div class="form-group">
+                <label for="up-cpu">Scale CPU Cores: <span id="up-cpu-val">4</span></label>
+                <input type="range" id="up-cpu" min="1" max="32" value="4" />
+              </div>
+              <div class="form-group">
+                <label for="up-ram">Scale System Memory: <span id="up-ram-val">8</span> GB</label>
+                <input type="range" id="up-ram" min="1" max="128" value="8" />
+              </div>
+              <div class="form-group">
+                <label for="up-storage">Scale Disk Capacity: <span id="up-storage-val">100</span> GB</label>
+                <input type="range" id="up-storage" min="10" max="2000" step="10" value="100" />
+              </div>
+              <div class="form-group">
+                <label for="up-gpu">Scale GPU accelerators</label>
+                <input type="number" id="up-gpu" min="0" max="8" value="0" />
+              </div>
+              <div class="form-group">
+                <label for="up-bandwidth">Scale Bandwidth (Mbps)</label>
+                <input type="number" id="up-bandwidth" min="10" max="10000" step="10" value="100" />
+              </div>
+              <button type="submit" class="btn btn-primary btn-block mt-4">Confirm Hardware Scaling</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Mock Payment Modal -->
+      <div id="payment-modal" class="modal-backdrop" style="display: none;">
+        <div class="modal-card glass card-modal">
+          <div class="modal-header">
+            <h3>Mock Payment Terminal</h3>
+            <button class="close-modal-btn icon-btn"><i data-lucide="x"></i></button>
+          </div>
+          <div class="modal-body">
+            <form id="payment-form">
+              <input type="hidden" id="payment-invoice-id" />
+              <div class="payment-amount-display">
+                <span>Billing Total:</span>
+                <h2 id="payment-amount-val">₹0.00</h2>
+              </div>
+              <!-- Credit Card Graphic -->
+              <div class="credit-card-art glass">
+                <div class="card-art-row">
+                  <i data-lucide="cpu" class="chip"></i>
+                  <i data-lucide="wifi" class="wifi"></i>
+                </div>
+                <div class="card-art-number">•••• •••• •••• 4821</div>
+                <div class="card-art-row mt-2">
+                  <div>
+                    <span class="lbl">Cardholder</span>
+                    <span class="val" id="card-holder-name">CMS CLOUD USER</span>
+                  </div>
+                  <div>
+                    <span class="lbl">Expires</span>
+                    <span class="val">12/30</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group mt-4">
+                <label for="pay-method">Payment Method</label>
+                <select id="pay-method" required>
+                  <option value="Credit Card">Credit Card</option>
+                  <option value="Debit Card">Debit Card</option>
+                  <option value="Net Banking">Net Banking</option>
+                  <option value="UPI">UPI</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Simulate Transaction Status</label>
+                <div class="toggle-row">
+                  <label class="toggle-container">
+                    <input type="checkbox" id="pay-simulate-success" checked />
+                    <span class="slider round"></span>
+                  </label>
+                  <span id="toggle-label">Simulate successful transaction</span>
+                </div>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-block mt-4">Authorize Transaction</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
     </div>
 
+    <!-- Script Entrypoint -->
     <script src="/app.js"></script>
   </body>
 </html>
