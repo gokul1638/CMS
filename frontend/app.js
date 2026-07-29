@@ -2,7 +2,8 @@
    CMS - Enterprise Application Script
 ---------------------------------------------------- */
 
-const API_BASE_URL = 'http://localhost:8081';
+const API_BASE_URL = window.location.origin.includes('localhost') ? 'http://localhost:8081' : window.location.origin;
+
 
 const state = {
   token: localStorage.getItem('jwt_token') || '',

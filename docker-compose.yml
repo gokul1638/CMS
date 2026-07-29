@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  # MySQL Database Service
+  mysql-db:
+    image: mysql:8.0
+    container_name: cms-mysql-db
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: cms_cloud
+      MYSQL_USER: cms_user
+      MYSQL_PASSWORD: cms_pass
+      MYSQL_ROOT_PASSWORD: root_pass
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - cms-network
+    restart: always
+
+  # Spring Boot API & Static UI Service
+  cms-backend:
+    build: .
+    container_name: cms-app
+    ports:
+      - "8081:8081"
+    depends_on:
+      - mysql-db
+    environment:
+      # Inject MySQL connection credentials replacing standard local H2 settings
+      DB_URL: jdbc:mysql://mysql-db:3306/cms_cloud?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      DB_DRIVER: com.mysql.cj.jdbc.Driver
+      DB_USERNAME: cms_user
+      DB_PASSWORD: cms_pass
+      DB_DIALECT: org.hibernate.dialect.MySQLDialect
+      DB_DDL: update
+    networks:
+      - cms-network
+    restart: always
+
+volumes:
+  mysql-data:
+    driver: local
+
+networks:
+  cms-network:
+    driver: bridge
