@@ -27,6 +27,27 @@ echo ""
 
 # ── Step 1: System Update & Dependencies ────────────────────
 info "Step 1/6 — Updating system packages..."
+
+# Wait for unattended-upgrades to finish (common on fresh EC2 boot)
+# This process holds the dpkg lock and causes "Could not get lock" errors
+wait_for_apt_lock() {
+    local MAX_WAIT=120  # Wait up to 2 minutes
+    local WAITED=0
+    while sudo fuser /var/lib/dpkg/lock-frontend >/dev/null 2>&1; do
+        if [ $WAITED -ge $MAX_WAIT ]; then
+            warn "Apt lock held too long — forcing release..."
+            sudo killall unattended-upgrades apt apt-get 2>/dev/null || true
+            sudo rm -f /var/lib/dpkg/lock-frontend /var/lib/dpkg/lock /var/cache/apt/archives/lock
+            sudo dpkg --configure -a -q
+            break
+        fi
+        info "Waiting for apt lock (held by unattended-upgrades)... ${WAITED}s"
+        sleep 5
+        WAITED=$((WAITED + 5))
+    done
+}
+
+wait_for_apt_lock
 sudo apt-get update -y -q
 sudo apt-get install -y -q openjdk-17-jdk nginx curl
 
