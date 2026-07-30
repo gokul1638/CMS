@@ -1,154 +1,210 @@
-# AWS Production Deployment Guide
+# CMS Deployment Guide — Option A: No Docker
 
-This guide details the step-by-step procedures to deploy the Cloud Management System (CMS) to Amazon Web Services (AWS) under two production-grade topologies.
+Deploy the **Spring Boot Backend** and **Nginx Frontend** as separate services on a single AWS EC2 instance. No Docker required.
 
 ---
 
-## Architecture Topologies
+## Architecture
+
+```
+Internet
+   │
+   ▼
+AWS EC2 Instance (Ubuntu 22.04)
+├── Nginx (port 80)  ←── serves index.html / styles.css / app.js
+│     └── /api/* ──────── proxied to localhost:8081
+└── Spring Boot JAR (port 8081) ←── connects to MySQL
+       │
+       ▼
+External MySQL DB @ 100.53.193.115:3306/CMS_cloud
+```
+
+---
+
+## Prerequisites
+
+| Item | Requirement |
+|------|-------------|
+| AWS Account | Free Tier or paid |
+| EC2 Instance | Ubuntu 22.04 LTS, `t3.small` or larger |
+| Security Group | Ports 22, 80, 8081 open inbound |
+| MySQL | Already running at `100.53.193.115:3306` |
+
+---
+
+## Step 1: Launch AWS EC2 Instance
+
+1. Go to **AWS Console → EC2 → Launch Instance**
+2. Choose:
+   - **AMI**: Ubuntu Server 22.04 LTS (Free Tier eligible)
+   - **Instance type**: `t3.small` (2 vCPU, 2 GB RAM) — ~$15/month
+   - **Key pair**: Create new → download `.pem` file (keep it safe!)
+3. Under **Network settings → Security Group**, add inbound rules:
+   | Port | Protocol | Source | Purpose |
+   |------|----------|--------|---------|
+   | 22 | TCP | Your IP | SSH access |
+   | 80 | TCP | 0.0.0.0/0 | Frontend (Nginx) |
+   | 8081 | TCP | 0.0.0.0/0 | Backend API |
+4. Click **Launch Instance** and note the **Public IPv4 address**
+
+---
+
+## Step 2: Connect to EC2 via SSH
+
+On your local machine (or Git Bash / PowerShell):
+
+```bash
+# Fix key permissions (Linux/Mac)
+chmod 400 your-key.pem
+
+# Connect to EC2
+ssh -i your-key.pem ubuntu@<YOUR_EC2_PUBLIC_IP>
+```
+
+> **Windows users**: Use [PuTTY](https://www.putty.org/) or Windows Terminal with SSH.
+
+---
+
+## Step 3: Upload Project to EC2
+
+**Method A — Git (Recommended if code is on GitHub):**
+```bash
+# On EC2 terminal
+sudo apt-get install -y git
+git clone https://github.com/your-username/your-repo.git
+cd your-repo
+```
+
+**Method B — SCP (Upload from local machine):**
+```bash
+# On your LOCAL machine — upload the entire project folder
+scp -i your-key.pem -r "D:/CBMS/CMS/CMS" ubuntu@<YOUR_EC2_IP>:/home/ubuntu/cms
+```
+
+---
+
+## Step 4: Run the Automated Deploy Script
+
+Once the code is on EC2:
+
+```bash
+# Navigate to project root
+cd /home/ubuntu/cms    # or wherever you uploaded it
+
+# Make deploy script executable
+chmod +x deploy.sh
+
+# Run the full deployment
+./deploy.sh
+```
+
+The script automatically:
+- ✅ Installs **Java 17** + **Nginx**
+- ✅ Builds the Spring Boot **JAR** with Maven
+- ✅ Deploys JAR to `/opt/cms/app.jar`
+- ✅ Registers backend as a **systemd service** (auto-starts on reboot)
+- ✅ Copies frontend files to `/var/www/cms/`
+- ✅ Configures Nginx to serve frontend + proxy API
+- ✅ Verifies both services are healthy
+
+---
+
+## Step 5: Verify Deployment
+
+After the script completes, test these URLs in your browser:
+
+| URL | Expected Result |
+|-----|----------------|
+| `http://<EC2_IP>/` | CMS Login page loads |
+| `http://<EC2_IP>/api/health` | `{"status":"UP"}` JSON response |
+| Login → Dashboard | Data loads from MySQL DB |
+
+---
+
+## Useful Management Commands
+
+```bash
+# ── Backend Service ──────────────────────────────
+sudo systemctl status cms-backend       # Check if running
+sudo systemctl restart cms-backend      # Restart backend
+sudo systemctl stop cms-backend         # Stop backend
+sudo journalctl -u cms-backend -f       # Live log stream
+sudo journalctl -u cms-backend -n 100   # Last 100 log lines
+
+# ── Nginx (Frontend) ─────────────────────────────
+sudo systemctl status nginx             # Check Nginx status
+sudo systemctl restart nginx            # Restart Nginx
+sudo nginx -t                           # Test config syntax
+sudo tail -f /var/log/nginx/error.log   # Nginx error logs
+
+# ── Update Backend (after code change) ──────────
+cd /home/ubuntu/cms
+git pull                                # Get latest code
+./mvnw clean package -DskipTests       # Rebuild JAR
+sudo cp target/cloud-management-system-1.0.0.jar /opt/cms/app.jar
+sudo systemctl restart cms-backend
+
+# ── Update Frontend (after file change) ─────────
+sudo cp frontend/index.html /var/www/cms/
+sudo cp frontend/styles.css /var/www/cms/
+sudo cp frontend/app.js     /var/www/cms/
+```
+
+---
+
+## Troubleshooting
+
+### Backend not starting?
+```bash
+sudo journalctl -u cms-backend -n 50
+# Look for: "Started CMS" or DB connection errors
+```
+
+### Can't connect to MySQL?
+```bash
+# Test DB reachability from EC2
+curl -v telnet://100.53.193.115:3306
+# If blocked, check your MySQL server firewall / security group
+```
+
+### Nginx 502 Bad Gateway?
+```bash
+# Backend isn't running yet — check status
+sudo systemctl status cms-backend
+# Spring Boot takes ~30 seconds to start
+```
+
+### CORS errors in browser console?
+- Already fixed in `SecurityConfig.java` — make sure you rebuilt the JAR after the fix
+
+---
+
+## Option B: Docker Compose (Alternative)
+
+If you later want to use Docker:
+
+```bash
+# Install Docker on EC2
+sudo apt-get install -y docker.io docker-compose
+sudo usermod -aG docker ubuntu
+# Log out and back in, then:
+docker-compose up -d --build
+```
+
+The existing `docker-compose.yml` handles both backend and frontend containers.
+
+---
+
+## AWS Architecture Diagram
 
 ```mermaid
 graph TD
-    subgraph Option A: Unified Containerized
-        EC2[Amazon EC2 Instance] --> Docker[Docker Compose]
-        Docker --> App[CMS Web Container:8081]
-        Docker --> DB[MySQL DB Container:3306]
-        Nginx[Nginx Reverse Proxy] --> App
+    Users[👥 Browser Users] -->|HTTP :80| Nginx
+    
+    subgraph EC2[AWS EC2 — Ubuntu 22.04]
+        Nginx[Nginx\nport 80\nstatic files + /api proxy] -->|proxy_pass :8081| SpringBoot
+        SpringBoot[Spring Boot JAR\nport 8081\nREST API]
     end
-
-    subgraph Option B: Decoupled Enterprise
-        Client[Cloud Clients] --> CF[Amazon CloudFront CDN]
-        CF --> S3[Amazon S3 Static Bucket: Frontend]
-        CF --> ALB[Application Load Balancer]
-        ALB --> ECS[AWS ECS Fargate Task: Spring Boot API]
-        ECS --> RDS[Amazon RDS MySQL Database]
-    end
+    
+    SpringBoot -->|JDBC| MySQL[(MySQL DB\n100.53.193.115:3306)]
 ```
-
----
-
-## Option A: Unified Containerized Deployment on EC2
-
-*Ideal for rapid staging environments or cost-sensitive production.*
-
-### Step 1: Provision the EC2 Instance
-1. Open the **AWS Console** and navigate to **EC2**.
-2. Click **Launch Instance**:
-   - **AMI**: Ubuntu Server 22.04 LTS (HVM).
-   - **Instance Type**: `t3.small` (2 vCPU, 2 GB RAM) or larger.
-   - **Key Pair**: Create or choose an existing key pair.
-   - **Security Group**: Configure inbound firewall rules:
-     - `22 (SSH)`: Restrict access to your IP address.
-     - `80 (HTTP)`: Open to anywhere (`0.0.0.0/0`).
-     - `443 (HTTPS)`: Open to anywhere (`0.0.0.0/0`).
-3. Click **Launch** and note the public IP address.
-
-### Step 2: Install Docker and Compose on EC2
-Connect to your instance via SSH:
-```bash
-ssh -i /path/to/key.pem ubuntu@your-ec2-ip
-```
-
-Update system resources and install Docker:
-```bash
-sudo apt-get update
-sudo apt-get install -y docker.io docker-compose
-sudo systemctl enable docker
-sudo systemctl start docker
-sudo usermod -aG docker ubuntu
-```
-*Note: Log out and log back in to apply the group permissions.*
-
-### Step 3: Run the Application
-1. Transfer the application source files to the EC2 instance (e.g. using `git clone` or `scp`).
-2. Run Docker Compose in detached mode:
-   ```bash
-   docker-compose up -d --build
-   ```
-3. Verify that both containers are running:
-   ```bash
-   docker ps
-   ```
-
-### Step 4: Configure Nginx Reverse Proxy with SSL (HTTPS)
-1. Install Nginx:
-   ```bash
-   sudo apt-get install -y nginx
-   ```
-2. Create an Nginx configuration block (`/etc/nginx/sites-available/cms`):
-   ```nginx
-   server {
-       listen 80;
-       server_name yourdomain.com www.yourdomain.com;
-
-       location / {
-           proxy_pass http://localhost:8081;
-           proxy_set_header Host $host;
-           proxy_set_header X-Real-IP $remote_addr;
-           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-           proxy_set_header X-Forwarded-Proto $scheme;
-       }
-   }
-   ```
-3. Enable configuration and restart Nginx:
-   ```bash
-   sudo ln -s /etc/nginx/sites-available/cms /etc/nginx/sites-enabled/
-   sudo systemctl restart nginx
-   ```
-4. Obtain free SSL Certificates via **Certbot (Let's Encrypt)**:
-   ```bash
-   sudo apt-get install -y certbot python3-certbot-nginx
-   sudo certbot --nginx -d yourdomain.com -d www.yourdomain.com
-   ```
-
----
-
-## Option B: Decoupled Enterprise Deployment
-
-*Best practice for scaling, security, and zero-downtime maintenance.*
-
-### Step 1: Deploy Frontend UI to Amazon S3
-1. Open the **Amazon S3** console and click **Create bucket**:
-   - Set a globally unique name (e.g. `cms-frontend-production`).
-   - Disable **Block all public access** (Access will be routed exclusively through CloudFront).
-2. Upload the contents of the root `frontend/` folder (`index.html`, `styles.css`, `app.js`) directly to the bucket root.
-
-### Step 2: Set up Database using Amazon RDS (MySQL)
-1. Navigate to **RDS** and click **Create database**:
-   - **Engine Type**: MySQL.
-   - **Templates**: Dev/Test (or Production for replica support).
-   - **Credentials**: Set master username (e.g. `cms_user`) and a secure password.
-   - **Connectivity**: Place RDS inside your VPC. Ensure **Public access** is set to **No**.
-2. Note the database **Endpoint Endpoint URL** (e.g., `cms-db.c123456.us-east-1.rds.amazonaws.com`).
-
-### Step 3: Host Backend on AWS ECS (Elastic Container Service)
-1. **Push Image to ECR (Elastic Container Registry)**:
-   - Create a private repository in ECR named `cms-backend`.
-   - Run the ECR login commands locally to authenticate, compile, and push your docker image:
-     ```bash
-     aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin your-account-id.dkr.ecr.us-east-1.amazonaws.com
-     docker build -t cms-backend .
-     docker tag cms-backend:latest your-account-id.dkr.ecr.us-east-1.amazonaws.com/cms-backend:latest
-     docker push your-account-id.dkr.ecr.us-east-1.amazonaws.com/cms-backend:latest
-     ```
-2. **Launch ECS Fargate Task**:
-   - Create a Task Definition utilizing **Fargate** (Serverless container runtime).
-   - Specify the ECR image URI.
-   - Define **Environment Variables** mapping connection properties:
-     - `DB_URL`: `jdbc:mysql://your-rds-endpoint:3306/cms_cloud?useSSL=false`
-     - `DB_USERNAME`: `cms_user`
-     - `DB_PASSWORD`: `your-rds-password`
-     - `DB_DRIVER`: `com.mysql.cj.jdbc.Driver`
-     - `DB_DIALECT`: `org.hibernate.dialect.MySQLDialect`
-     - `DB_DDL`: `update`
-   - Run the task inside an **ECS Service** mapped behind an **Application Load Balancer (ALB)**.
-
-### Step 4: Route Traffic via CloudFront (CDN)
-1. Open the **CloudFront** console and click **Create distribution**:
-   - **Origin Domain**: Select your S3 bucket.
-   - **Origin Access Control (OAC)**: Enable OAC to restrict S3 reads exclusively to CloudFront.
-2. Add a **Second Origin** (API Routing):
-   - **Origin Domain**: Enter the domain DNS name of your **Application Load Balancer (ALB)**.
-3. Configure **Behaviors**:
-   - **Default Behavior (`/*`)**: Points to S3 Origin (delivers HTML/CSS/JS).
-   - **API Behavior (`/api/*`)**: Points to ALB Origin (forwards JSON API queries to ECS). Set cache parameters to **Disable caching** (ensures live database updates).
-4. Configure SSL certificates via **AWS Certificate Manager (ACM)** for custom domain mapping.

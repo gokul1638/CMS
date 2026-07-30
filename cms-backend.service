@@ -1,0 +1,50 @@
+# ==========================================
+# CMS Backend — Linux Systemd Service Unit
+# ==========================================
+# Installation:
+#   sudo cp cms-backend.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable cms-backend
+#   sudo systemctl start cms-backend
+#
+# Management Commands:
+#   sudo systemctl status cms-backend      → Check running status
+#   sudo systemctl restart cms-backend     → Restart service
+#   sudo journalctl -u cms-backend -f      → Live log stream
+# ==========================================
+
+[Unit]
+Description=CMS Cloud Management System — Spring Boot Backend
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+
+# Working directory — where the JAR is located
+WorkingDirectory=/opt/cms
+
+# Java command — runs the Spring Boot JAR
+ExecStart=/usr/bin/java \
+    -jar /opt/cms/app.jar \
+    -Xms256m \
+    -Xmx512m
+
+# Environment variables — override DB connection here if needed
+# Uncomment and set values to override application.properties defaults:
+# Environment="DB_URL=jdbc:mysql://100.53.193.115:3306/CMS_cloud?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+# Environment="DB_USERNAME=cmsuser"
+# Environment="DB_PASSWORD=Cms@12345"
+
+# Restart behaviour — auto restart on crash (not on clean stop)
+Restart=on-failure
+RestartSec=10s
+
+# Log output to systemd journal
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=cms-backend
+
+[Install]
+WantedBy=multi-user.target
